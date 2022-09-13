@@ -12,13 +12,41 @@ const _proggers = require('cli-progress'),
     _math = require('mathjs'),
     _version = require('./package.json').version
 
-const clacSize = (a, b) => {
-    if (0 == a) return "0 Bytes";
-    var c = 1024,
-        d = b || 2,
-        e = ["Bytes", "KB", "MB", "GB", "TB", "PB", "EB", "ZB", "YB"],
-        f = Math.floor(Math.log(a) / Math.log(c));
-    return parseFloat((a / Math.pow(c, f)).toFixed(d)) + " " + e[f]
+// https://stackoverflow.com/a/25651291/10999871
+// pBytes: the size in bytes to be converted.
+// pUnits: 'si'|'iec' si units means the order of magnitude is 10^3, iec uses 2^10
+
+function prettyNumber(pBytes, pUnits) {
+    // Handle some special cases
+    if(pBytes == 0) return '0 Bytes';
+    if(pBytes == 1) return '1 Byte';
+    if(pBytes == -1) return '-1 Byte';
+
+    var bytes = Math.abs(pBytes)
+    if(pUnits && pUnits.toLowerCase() && pUnits.toLowerCase() == 'si') {
+        // SI units use the Metric representation based on 10^3 as a order of magnitude
+        var orderOfMagnitude = Math.pow(10, 3);
+        var abbreviations = ['Bytes', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
+    } else {
+        // IEC units use 2^10 as an order of magnitude
+        var orderOfMagnitude = Math.pow(2, 10);
+        var abbreviations = ['Bytes', 'KiB', 'MiB', 'GiB', 'TiB', 'PiB', 'EiB', 'ZiB', 'YiB'];
+    }
+    var i = Math.floor(Math.log(bytes) / Math.log(orderOfMagnitude));
+    var result = (bytes / Math.pow(orderOfMagnitude, i));
+
+    // This will get the sign right
+    if(pBytes < 0) {
+        result *= -1;
+    }
+
+    // This bit here is purely for show. it drops the percision on numbers greater than 100 before the units.
+    // it also always shows the full number of bytes if bytes is the unit.
+    if(result >= 99.995 || i==0) {
+        return result.toFixed(0) + ' ' + abbreviations[i];
+    } else {
+        return result.toFixed(2) + ' ' + abbreviations[i];
+    }
 }
 
 exports.GetLink = async (u) => {
@@ -70,15 +98,15 @@ exports.DLFunc = async (u, cb = () => { }) => {
                 barsize: 25
             }, _proggers.Presets.shades_classic)
             loadbar.start(size, 0, {
-                size: clacSize(size, 3),
-                current: clacSize(currentSize, 3),
+                size: prettyNumber(size, 3),
+                current: prettyNumber(currentSize, 3),
                 speed: 0
             })
             res.on('data', c => {
                 currentSize += c.length;
                 loadbar.increment(c.length, {
-                    speed: clacSize(c.length),
-                    current: clacSize(currentSize, 3)
+                    speed: prettyNumber(c.length),
+                    current: prettyNumber(currentSize, 3)
                 })
             })
             res.on('end', _ => {
