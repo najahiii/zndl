@@ -23,7 +23,7 @@ function prettyNumber(pBytes, pUnits) {
     if(pBytes == -1) return '-1 Byte';
 
     var bytes = Math.abs(pBytes)
-    if(pUnits && pUnits.toLowerCase() && pUnits.toLowerCase() == 'si') {
+    if(pUnits && pUnits.toString().toLowerCase() && pUnits.toString().toLowerCase() == 'si') {
         // SI units use the Metric representation based on 10^3 as a order of magnitude
         var orderOfMagnitude = Math.pow(10, 3);
         var abbreviations = ['Bytes', 'kB', 'MB', 'GB', 'TB', 'PB', 'EB', 'ZB', 'YB'];
