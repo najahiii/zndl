@@ -110,8 +110,9 @@ exports.DLFunc = async (u, cb = () => { }) => {
             })
             res.on('data', c => {
                 currentSize += c.length;
+                spd = currentSize / 60;
                 loadbar.increment(c.length, {
-                    speed: prettyNumber(c.length),
+                    speed: prettyNumber(spd),
                     current: prettyNumber(currentSize, 3)
                 })
             })
